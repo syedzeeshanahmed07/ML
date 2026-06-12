@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Detection History - Wire Rope Inspector</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            backdrop-filter: blur(10px);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: white;
+        }
+        .nav-links {
+            display: flex;
+            gap: 1rem;
+        }
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            padding: 0.5rem 1rem;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .nav-links a:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        .history-section {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2rem;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+            color: white;
+        }
+        .history-section h2 {
+            margin-bottom: 2rem;
+            font-size: 2rem;
+            text-align: center;
+        }
+        .history-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat-card {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 2rem;
+            font-weight: bold;
+            color: #ff6b6b;
+        }
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-top: 0.5rem;
+        }
+        .history-table {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .table-header {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 150px 120px 180px 100px;
+            gap: 1rem;
+            font-weight: bold;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .table-row {
+            padding: 1rem;
+            display: grid;
+            grid-template-columns: 1fr 150px 120px 180px 100px;
+            gap: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: background 0.3s;
+        }
+        .table-row:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .defect-badge {
+            display: inline-block;
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .defect-break {
+            background: rgba(255, 71, 87, 0.3);
+            color: #ff4757;
+            border: 1px solid #ff4757;
+        }
+        .defect-thunderbolt {
+            background: rgba(255, 167, 38, 0.3);
+            color: #ffa726;
+            border: 1px solid #ffa726;
+        }
+        .defect-unknown {
+            background: rgba(120, 144, 156, 0.3);
+            color: #78909c;
+            border: 1px solid #78909c;
+        }
+        .confidence-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff6b6b, #ff8e8e);
+        }
+        .confidence-text {
+            font-size: 0.8rem;
+            margin-top: 0.3rem;
+        }
+        .image-preview {
+            width: 60px;
+            height: 40px;
+            object-fit: cover;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+        .image-preview:hover {
+            transform: scale(1.1);
+        }
+        .empty-state {
+            text-align: center;
+            padding: 3rem;
+            opacity: 0.7;
+        }
+        .empty-state img {
+            width: 100px;
+            opacity: 0.5;
+            margin-bottom: 1rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+        .modal-image {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 10px;
+        }
+        .modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+        }
+        .filter-section {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .filter-select {
+            padding: 0.5rem;
+            border-radius: 5px;
+            border: none;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+        .filter-select option {
+            background: #333;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">Wire Rope Inspector</div>
+            <div class="nav-links">
+                <a href="{{ url_for('index') }}">Home</a>
+                <a href="{{ url_for('cnn_detection') }}">CNN Detection</a>
+                <a href="{{ url_for('yolo_detection') }}">YOLO Detection</a>
+                <a href="{{ url_for('yolo_live') }}">Live Detection</a>
+                <a href="{{ url_for('history') }}">History</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="history-section">
+            <h2>CNN Detection History</h2>
+
+            {% if history %}
+            <div class="history-stats">
+                <div class="stat-card">
+                    <div class="stat-number">{{ history|length }}</div>
+                    <div class="stat-label">Total Detections</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ history|selectattr('defect_type', 'equalto', 'break')|list|length }}</div>
+                    <div class="stat-label">Break Defects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ history|selectattr('defect_type', 'equalto', 'thunderbolt')|list|length }}</div>
+                    <div class="stat-label">Thunderbolt Defects</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">{{ history|selectattr('defect_type', 'equalto', 'unknown')|list|length }}</div>
+                    <div class="stat-label">Unknown Defects</div>
+                </div>
+            </div>
+
+            <div class="filter-section">
+                <label style="color: white;">Filter by defect type:</label>
+                <select class="filter-select" id="defectFilter" onchange="filterHistory()">
+                    <option value="all">All Defects</option>
+                    <option value="break">Break</option>
+                    <option value="thunderbolt">Thunderbolt</option>
+                    <option value="unknown">Unknown</option>
+                </select>
+            </div>
+
+            <div class="history-table">
+                <div class="table-header">
+                    <div>Image</div>
+                    <div>Defect Type</div>
+                    <div>Confidence</div>
+                    <div>Date & Time</div>
+                    <div>Actions</div>
+                </div>
+
+                {% for record in history %}
+                <div class="table-row" data-defect="{{ record.defect_type }}">
+                    <div>
+                        <img src="{{ url_for('static', filename='uploads/' + record.filename) }}" alt="Detection image" class="image-preview" onclick="openModal('{{ url_for('static', filename='uploads/' + record.filename) }}')">
+                    </div>
+                    <div>
+                        <span class="defect-badge defect-{{ record.defect_type }}">{{ record.defect_type }}</span>
+                    </div>
+                    <div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ (record.confidence * 100)|round(1) }}%"></div>
+                        </div>
+                        <div class="confidence-text">{{ (record.confidence * 100)|round(1) }}%</div>
+                    </div>
+                    <div>{{ record.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                    <div>
+                        <button onclick="openModal('{{ url_for('static', filename='uploads/' + record.filename) }}')" style="background: #ff6b6b; color: white; border: none; padding: 0.3rem 0.8rem; border-radius: 5px; cursor: pointer;">View</button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <h3>No Detection History</h3>
+                <p>Start by uploading images for CNN detection to build your history.</p>
+                <a href="{{ url_for('cnn_detection') }}" style="display: inline-block; margin-top: 1rem; padding: 1rem 2rem; background: #ff6b6b; color: white; text-decoration: none; border-radius: 8px;">Start Detection</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Modal for image preview -->
+    <div id="imageModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <img id="modalImage" class="modal-image" src="" alt="Full size image">
+        </div>
+    </div>
+
+    <script>
+        function openModal(imagePath) {
+            const modal = document.getElementById('imageModal');
+            const modalImage = document.getElementById('modalImage');
+            modalImage.src = imagePath;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            const modal = document.getElementById('imageModal');
+            modal.style.display = 'none';
+        }
+
+        function filterHistory() {
+            const filter = document.getElementById('defectFilter').value;
+            const rows = document.querySelectorAll('.table-row');
+            
+            rows.forEach(row => {
+                const defectType = row.getAttribute('data-defect');
+                if (filter === 'all' || defectType === filter) {
+                    row.style.display = 'grid';
+                } else {
+                    row.style.display = 'none';
+                }
+            });
+        }
+
+        // Close modal when clicking outside the image
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
