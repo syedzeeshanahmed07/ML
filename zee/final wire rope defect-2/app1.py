@@ -30,16 +30,21 @@ logger = logging.getLogger(__name__)
 
 # ── Database details ────────────────────────────────────────────
 db_config = dict(
-    host='localhost',
-    user='root',
-    password='root',
-    database='wire_rope_detection_db'
+    host=os.environ.get('DB_HOST', 'localhost'),
+    user=os.environ.get('DB_USER', 'root'),
+    password=os.environ.get('DB_PASSWORD', 'root'),
+    database=os.environ.get('DB_NAME', 'wire_rope_detection_db'),
+    port=int(os.environ.get('DB_PORT', 3306))
 )
 
 # ── CNN / YOLO models ───────────────────────────────────────────
 try:
-    cnn_model = load_model(r'C:\Users\91776\OneDrive\Desktop\FYP2026\zee\final wire rope defect-2\model.h5')
-    yolo_model = YOLO(r'C:\Users\91776\OneDrive\Desktop\FYP2026\zee\final wire rope defect-2\best.pt')
+    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+    cnn_model_path = os.environ.get('CNN_MODEL_PATH', os.path.join(BASE_DIR, 'model.h5'))
+    yolo_model_path = os.environ.get('YOLO_MODEL_PATH', os.path.join(BASE_DIR, 'best.pt'))
+    
+    cnn_model = load_model(cnn_model_path)
+    yolo_model = YOLO(yolo_model_path)
     logger.info('Models loaded')
 except Exception as err:
     logger.error(f'Model loading failed: {err}')
