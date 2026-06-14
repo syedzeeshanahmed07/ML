@@ -205,6 +205,8 @@ def cnn_detection():
             if cnn_model is None:
     return "CNN model not found"
 
+if cnn_model is None:
+    return "CNN model not found"
 preds = cnn_model.predict(preprocess(img))[0]
             idx = int(np.argmax(preds))
             defect = class_names[idx]
@@ -259,6 +261,9 @@ def yolo_detection():
 
             frame = cv2.imread(upath)
             if yolo_model is None:
+    continue
+
+if yolo_model is None:
     continue
 
 results = yolo_model.predict(source=frame, conf=0.3)[0]
@@ -437,6 +442,9 @@ def gen_frames():
             
         with torch.no_grad():
             if yolo_model is None:
+    continue
+
+if yolo_model is None:
     continue
 
 results = yolo_model.predict(source=frame, conf=0.3)[0]
