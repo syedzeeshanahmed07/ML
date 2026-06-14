@@ -38,17 +38,32 @@ db_config = dict(
 )
 
 # ── CNN / YOLO models ───────────────────────────────────────────
+# ── CNN / YOLO models ───────────────────────────────────────────
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+cnn_model_path = os.environ.get(
+    'CNN_MODEL_PATH',
+    os.path.join(BASE_DIR, 'model.h5')
+)
+
+yolo_model_path = os.environ.get(
+    'YOLO_MODEL_PATH',
+    os.path.join(BASE_DIR, 'best.pt')
+)
+
 try:
-    BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-    cnn_model_path = os.environ.get('CNN_MODEL_PATH', os.path.join(BASE_DIR, 'model.h5'))
-    yolo_model_path = os.environ.get('YOLO_MODEL_PATH', os.path.join(BASE_DIR, 'best.pt'))
-    
     cnn_model = load_model(cnn_model_path)
+    logger.info("CNN model loaded")
+except Exception as e:
+    logger.warning(f"CNN model not loaded: {e}")
+    cnn_model = None
+
+try:
     yolo_model = YOLO(yolo_model_path)
-    logger.info('Models loaded')
-except Exception as err:
-    logger.error(f'Model loading failed: {err}')
-    raise
+    logger.info("YOLO model loaded")
+except Exception as e:
+    logger.warning(f"YOLO model not loaded: {e}")
+    yolo_model = None
 
 class_names = ['break', 'thunderbolt', 'unknown']
 
@@ -187,7 +202,10 @@ def cnn_detection():
             file.save(path)
 
             img = Image.open(path)
-            preds = cnn_model.predict(preprocess(img))[0]
+            if cnn_model is None:
+    return "CNN model not found"
+
+preds = cnn_model.predict(preprocess(img))[0]
             idx = int(np.argmax(preds))
             defect = class_names[idx]
             conf = float(preds[idx])
@@ -240,7 +258,10 @@ def yolo_detection():
             file.save(upath)
 
             frame = cv2.imread(upath)
-            results = yolo_model.predict(source=frame, conf=0.3)[0]
+            if yolo_model is None:
+    continue
+
+results = yolo_model.predict(source=frame, conf=0.3)[0]
 
             detections = []
             if results.boxes is not None:
@@ -415,7 +436,10 @@ def gen_frames():
             break
             
         with torch.no_grad():
-            results = yolo_model.predict(source=frame, conf=0.3)[0]
+            if yolo_model is None:
+    continue
+
+results = yolo_model.predict(source=frame, conf=0.3)[0]
             
             if results.boxes is not None:
                 for b in results.boxes:
