@@ -203,8 +203,7 @@ def cnn_detection():
 
             img = Image.open(path)
             if cnn_model is None:
-    return "CNN model not found"
-
+                return "CNN model not found"
 if cnn_model is None:
     return "CNN model not found"
 preds = cnn_model.predict(preprocess(img))[0]
