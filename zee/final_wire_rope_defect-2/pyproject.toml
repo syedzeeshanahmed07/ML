@@ -1,0 +1,2 @@
+[tool.vercel]
+entrypoint = "zee.final_wire_rope_defect_2.app1:app"
